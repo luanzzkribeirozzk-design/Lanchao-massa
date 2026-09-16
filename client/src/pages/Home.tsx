@@ -32,9 +32,12 @@ type Product = {
   price: number;
   category: Category;
   tag?: string;
+  options?: string[];
 };
 
-type CartItem = Product & { quantity: number };
+type CartItem = Product & { quantity: number; option?: string };
+
+const LOGO_PATH = "/logo-lanchao-massa.png";
 
 const WHATSAPP_NUMBER = "5583981053745";
 const OPENING_TIME = "17:30";
@@ -115,6 +118,7 @@ const products: Product[] = [
     description: "Escolha calabresa ou frango, com queijo, salada e molho da casa.",
     price: 15,
     category: "Tradicionais",
+    options: ["Calabresa", "Frango"],
   },
   {
     id: "x-salada",
@@ -144,6 +148,7 @@ const products: Product[] = [
     description: "Versão especial com calabresa ou frango, queijo e complementos.",
     price: 25,
     category: "Especiais",
+    options: ["Calabresa", "Frango"],
   },
   {
     id: "esp-x-tudo",
@@ -165,6 +170,7 @@ const products: Product[] = [
     description: "Baguete assada, recheio cremoso, queijo e molho da casa.",
     price: 22,
     category: "Baguetes & hot dog",
+    options: ["Frango", "Calabresa"],
   },
   {
     id: "mega-hot-dog",
@@ -186,6 +192,7 @@ const products: Product[] = [
     description: "Escolha seu recheio favorito entre os sabores da casa.",
     price: 10,
     category: "Pastéis",
+    options: ["Pizza", "Frango", "Calabresa", "Carne"],
   },
   {
     id: "pastel-queijo-coalho",
@@ -207,6 +214,7 @@ const products: Product[] = [
     description: "Panqueca recheada, molho especial e queijo gratinado.",
     price: 18,
     category: "Panquecas & espaguetes",
+    options: ["Carne", "Frango"],
   },
   {
     id: "espaguete",
@@ -214,6 +222,7 @@ const products: Product[] = [
     description: "Massa ao molho da casa com opção de carne ou frango.",
     price: 17,
     category: "Panquecas & espaguetes",
+    options: ["Carne", "Frango"],
   },
   {
     id: "batata",
@@ -229,6 +238,7 @@ const products: Product[] = [
     description: "Consulte os sabores disponíveis no dia.",
     price: 6,
     category: "Porções & bebidas",
+    options: ["Acerola", "Abacaxi", "Maracujá", "Goiaba"],
   },
   {
     id: "refri-lata",
@@ -236,6 +246,7 @@ const products: Product[] = [
     description: "Consulte as opções disponíveis.",
     price: 6,
     category: "Porções & bebidas",
+    options: ["Coca-Cola", "Guaraná", "Fanta"],
   },
   {
     id: "agua",
@@ -265,6 +276,9 @@ export default function Home() {
   const [customerName, setCustomerName] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [isOpen] = useState(isOpenNow);
+  const [optionProduct, setOptionProduct] = useState<Product | null>(null);
+  const [optionChoice, setOptionChoice] = useState("");
+  const [optionAction, setOptionAction] = useState<"cart" | "buy">("cart");
 
   const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -282,16 +296,39 @@ export default function Home() {
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const checkoutTotal = checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, option?: string) => {
+    const itemId = `${product.id}:${option ?? "default"}`;
     setCart((current) => {
-      const existing = current.find((item) => item.id === product.id);
+      const existing = current.find((item) => item.id === itemId);
       if (existing) {
         return current.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
+          item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item,
         );
       }
-      return [...current, { ...product, quantity: 1 }];
+      return [...current, { ...product, id: itemId, quantity: 1, option }];
     });
+  };
+
+  const chooseProduct = (product: Product, action: "cart" | "buy") => {
+    if (!product.options?.length) {
+      if (action === "cart") addToCart(product);
+      else startCheckout([{ ...product, quantity: 1 }]);
+      return;
+    }
+    setOptionProduct(product);
+    setOptionChoice(product.options[0]);
+    setOptionAction(action);
+  };
+
+  const confirmOption = () => {
+    if (!optionProduct || !optionChoice) return;
+    if (optionAction === "cart") {
+      addToCart(optionProduct, optionChoice);
+      setOptionProduct(null);
+    } else {
+      setOptionProduct(null);
+      startCheckout([{ ...optionProduct, id: `${optionProduct.id}:${optionChoice}`, option: optionChoice, quantity: 1 }]);
+    }
   };
 
   const changeQuantity = (id: string, amount: number) => {
@@ -318,7 +355,7 @@ export default function Home() {
   const sendOrder = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const orderLines = checkoutItems
-      .map((item) => `• ${item.quantity}x ${item.name} — ${money(item.price * item.quantity)}`)
+      .map((item) => `• ${item.quantity}x ${item.name}${item.option ? ` (${item.option})` : ""} — ${money(item.price * item.quantity)}`)
       .join("\n");
     const message = [
       "Olá, Lanchão Massa! Quero fazer um pedido:",
@@ -356,8 +393,7 @@ export default function Home() {
 
       <header className="topbar">
         <a className="brand" href="#inicio" aria-label="Lanchão Massa início">
-          <span className="brand-mark"><UtensilsCrossed size={21} /></span>
-          <span><b>LANCHÃO</b><em>MASSA</em></span>
+          <img className="brand-logo" src={LOGO_PATH} alt="Lanchão Massa Delivery" />
         </a>
         <div className="topbar__right">
           <div className={`open-indicator ${isOpen ? "is-open" : "is-closed"}`}>
@@ -383,17 +419,7 @@ export default function Home() {
             <a className="primary-cta" href="#cardapio">Ver cardápio <ArrowRight size={18} /></a>
           </div>
           <div className="hero__plate" aria-hidden="true">
-            <div className="plate-ring" />
-            <div className="burger-illustration">
-              <div className="burger-bun burger-bun--top"><i /><i /><i /><i /></div>
-              <div className="burger-lettuce" />
-              <div className="burger-cheese" />
-              <div className="burger-patty" />
-              <div className="burger-cheese burger-cheese--lower" />
-              <div className="burger-lettuce burger-lettuce--lower" />
-              <div className="burger-bun burger-bun--bottom" />
-            </div>
-            <span className="hero__stamp">feito<br /><b>na hora</b></span>
+            <div className="hero-logo-wrap"><img src={LOGO_PATH} alt="" className="hero-logo" /></div>
           </div>
         </section>
 
@@ -436,9 +462,10 @@ export default function Home() {
                 <p className="product-category">{product.category}</p>
                 <h3>{product.name}</h3>
                 <p className="product-description">{product.description}</p>
+                {product.options && <div className="options-hint"><ChevronDown size={13} /> Escolha: {product.options.join(" · ")}</div>}
                 <div className="product-actions">
-                  <button className="add-button" onClick={() => addToCart(product)}><Plus size={16} /> Adicionar ao carrinho</button>
-                  <button className="buy-button" onClick={() => buyNow(product)}>Comprar</button>
+                  <button className="add-button" onClick={() => chooseProduct(product, "cart")}><Plus size={16} /> Adicionar ao carrinho</button>
+                  <button className="buy-button" onClick={() => chooseProduct(product, "buy")}>Comprar</button>
                 </div>
               </article>
             ))}
@@ -465,11 +492,22 @@ export default function Home() {
               <div className="cart-empty"><div className="cart-empty__icon"><ShoppingBag size={28} /></div><h3>Seu carrinho está vazio</h3><p>Adicione seus favoritos e monte seu pedido.</p><button className="primary-cta primary-cta--small" onClick={() => { setCartOpen(false); document.getElementById("cardapio")?.scrollIntoView({ behavior: "smooth" }); }}>Explorar cardápio <ArrowRight size={16} /></button></div>
             ) : (
               <>
-                <div className="cart-items">{cart.map((item) => <div className="cart-item" key={item.id}><div className="cart-item__info"><b>{item.name}</b><span>{money(item.price)} cada</span></div><div className="cart-item__bottom"><div className="quantity-control"><button onClick={() => changeQuantity(item.id, -1)} aria-label={`Diminuir ${item.name}`}>{item.quantity === 1 ? <Trash2 size={14} /> : <Minus size={14} />}</button><b>{item.quantity}</b><button onClick={() => changeQuantity(item.id, 1)} aria-label={`Aumentar ${item.name}`}><Plus size={14} /></button></div><strong>{money(item.price * item.quantity)}</strong></div></div>)}</div>
+                <div className="cart-items">{cart.map((item) => <div className="cart-item" key={item.id}><div className="cart-item__info"><b>{item.name}</b><span>{money(item.price)} cada</span></div>{item.option && <small className="cart-item__option">Opção: {item.option}</small>}<div className="cart-item__bottom"><div className="quantity-control"><button onClick={() => changeQuantity(item.id, -1)} aria-label={`Diminuir ${item.name}`}>{item.quantity === 1 ? <Trash2 size={14} /> : <Minus size={14} />}</button><b>{item.quantity}</b><button onClick={() => changeQuantity(item.id, 1)} aria-label={`Aumentar ${item.name}`}><Plus size={14} /></button></div><strong>{money(item.price * item.quantity)}</strong></div></div>)}</div>
                 <div className="cart-summary"><div><span>Subtotal</span><strong>{money(cartTotal)}</strong></div><small>Frete calculado e combinado pelo WhatsApp.</small><button className="checkout-button" onClick={() => startCheckout(cart)}>Continuar para finalizar <ArrowRight size={17} /></button></div>
               </>
             )}
           </aside>
+        </div>
+      )}
+
+      {optionProduct && (
+        <div className="overlay" onMouseDown={(event) => event.target === event.currentTarget && setOptionProduct(null)}>
+          <section className="option-modal" aria-label={`Escolher opção para ${optionProduct.name}`}>
+            <div className="panel-header"><div><p className="eyebrow eyebrow--dark"><span /> Personalize seu pedido</p><h2>{optionProduct.name}</h2></div><button className="icon-button" onClick={() => setOptionProduct(null)} aria-label="Fechar opções"><X size={20} /></button></div>
+            <p className="option-modal__copy">Escolha uma opção para continuar:</p>
+            <div className="option-list">{optionProduct.options?.map((option) => <button className={optionChoice === option ? "option-choice is-selected" : "option-choice"} key={option} onClick={() => setOptionChoice(option)}><span className="option-radio">{optionChoice === option && <Check size={13} />}</span><b>{option}</b><ArrowRight size={16} /></button>)}</div>
+            <button className="checkout-button" onClick={confirmOption}>{optionAction === "cart" ? "Adicionar ao carrinho" : "Comprar agora"} <ArrowRight size={17} /></button>
+          </section>
         </div>
       )}
 
