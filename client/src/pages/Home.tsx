@@ -33,6 +33,7 @@ type Product = {
   category: Category;
   tag?: string;
   options?: string[];
+  optionPrices?: Record<string, number>;
   image?: string;
 };
 
@@ -90,14 +91,14 @@ const products: Product[] = [
     id: "combo-super",
     name: "Super combo artesanal",
     description: "Lanche artesanal, batata frita e refrigerante.",
-    price: 28,
+    price: 29.99,
     category: "Combos",
     tag: "Mais pedido",
   },
   {
     id: "combo-x-gigante",
-    name: "Combo 06 · X-Gigante",
-    description: "X-Gigante com batata frita e refrigerante.",
+    name: "Combo 06 · Especial gigante 1 kg",
+    description: "Hambúrguer gigante de 1 kg, batata frita e bebida.",
     price: 45,
     category: "Combos",
   },
@@ -132,7 +133,7 @@ const products: Product[] = [
   {
     id: "combo-especial",
     name: "Combo 01 · Especial",
-    description: "Lanche especial com acompanhamento e bebida.",
+    description: "Lanche especial, batata frita e refrigerante.",
     price: 30,
     category: "Combos",
   },
@@ -153,16 +154,16 @@ const products: Product[] = [
   },
   {
     id: "x-salada",
-    name: "X-Salada",
+    name: "X-Tudo tradicional",
     description: "Carne, queijo, presunto, salada fresca e molho especial.",
     price: 17,
     category: "Tradicionais",
   },
   {
     id: "x-bacon",
-    name: "X-Bacon",
-    description: "Carne, queijo, bacon crocante, salada e molho especial.",
-    price: 18,
+    name: "Frango tradicional",
+    description: "Frango, queijo, salada fresca e molho especial.",
+    price: 15,
     category: "Tradicionais",
   },
   {
@@ -205,10 +206,11 @@ const products: Product[] = [
   },
   {
     id: "mega-hot-dog",
-    name: "Mega hot dog",
-    description: "Pão macio, salsicha, purê, milho, batata palha e molhos.",
-    price: 30,
+    name: "Hot dog carne / frango",
+    description: "Pão macio, recheio da casa, milho, batata palha e molhos.",
+    price: 20,
     category: "Baguetes & hot dog",
+    options: ["Carne", "Frango"],
   },
   {
     id: "pastel-misto",
@@ -236,16 +238,17 @@ const products: Product[] = [
     id: "pastel-camarao",
     name: "Pastel de camarão",
     description: "Camarão temperado em massa crocante.",
-    price: 15,
+    price: 18,
     category: "Pastéis",
   },
   {
     id: "panqueca",
     name: "Panqueca carne / frango",
     description: "Panqueca recheada, molho especial e queijo gratinado.",
-    price: 18,
+    price: 16,
     category: "Panquecas & espaguetes",
     options: ["Carne", "Frango"],
+    optionPrices: { Carne: 16, Frango: 17 },
   },
   {
     id: "espaguete",
@@ -254,6 +257,7 @@ const products: Product[] = [
     price: 17,
     category: "Panquecas & espaguetes",
     options: ["Carne", "Frango"],
+    optionPrices: { Carne: 17, Frango: 18 },
   },
   {
     id: "batata",
@@ -329,6 +333,7 @@ export default function Home() {
 
   const addToCart = (product: Product, option?: string) => {
     const itemId = `${product.id}:${option ?? "default"}`;
+    const selectedPrice = option ? product.optionPrices?.[option] ?? product.price : product.price;
     setCart((current) => {
       const existing = current.find((item) => item.id === itemId);
       if (existing) {
@@ -336,7 +341,7 @@ export default function Home() {
           item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item,
         );
       }
-      return [...current, { ...product, id: itemId, quantity: 1, option }];
+      return [...current, { ...product, id: itemId, price: selectedPrice, quantity: 1, option }];
     });
   };
 
@@ -358,7 +363,8 @@ export default function Home() {
       setOptionProduct(null);
     } else {
       setOptionProduct(null);
-      startCheckout([{ ...optionProduct, id: `${optionProduct.id}:${optionChoice}`, option: optionChoice, quantity: 1 }]);
+      const selectedPrice = optionProduct.optionPrices?.[optionChoice] ?? optionProduct.price;
+      startCheckout([{ ...optionProduct, id: `${optionProduct.id}:${optionChoice}`, price: selectedPrice, option: optionChoice, quantity: 1 }]);
     }
   };
 
