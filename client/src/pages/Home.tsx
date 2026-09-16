@@ -249,6 +249,7 @@ const products: Product[] = [
     category: "Panquecas & espaguetes",
     options: ["Carne", "Frango"],
     optionPrices: { Carne: 16, Frango: 17 },
+    tag: "A partir de",
   },
   {
     id: "espaguete",
@@ -258,6 +259,7 @@ const products: Product[] = [
     category: "Panquecas & espaguetes",
     options: ["Carne", "Frango"],
     optionPrices: { Carne: 17, Frango: 18 },
+    tag: "A partir de",
   },
   {
     id: "batata",
