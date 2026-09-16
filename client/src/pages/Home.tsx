@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
 import {
   ArrowRight,
   Check,
@@ -15,6 +16,7 @@ import {
   UtensilsCrossed,
   X,
 } from "lucide-react";
+import { publicDb } from "../firebase";
 
 type Category =
   | "Combos"
@@ -319,10 +321,37 @@ export default function Home() {
   const [optionProduct, setOptionProduct] = useState<Product | null>(null);
   const [optionChoice, setOptionChoice] = useState("");
   const [optionAction, setOptionAction] = useState<"cart" | "buy">("cart");
+  const [remoteProducts, setRemoteProducts] = useState<Product[] | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(publicDb, "products"), (snapshot) => {
+      const next = snapshot.docs
+        .filter((item) => item.data().active !== false)
+        .map((item) => {
+          const data = item.data();
+          const category = data.category as Category;
+          return {
+            id: item.id,
+            name: String(data.name ?? ""),
+            description: String(data.description ?? ""),
+            price: Number(data.price ?? 0),
+            category: categories.some((entry) => entry.value === category) ? category : "Combos",
+            image: String(data.image ?? "") || productImages[item.id],
+            options: Array.isArray(data.options) ? data.options.map(String) : String(data.options ?? "").split(",").map((value) => value.trim()).filter(Boolean),
+            tag: data.tag ? String(data.tag) : undefined,
+          } satisfies Product;
+        })
+        .filter((product) => product.name);
+      setRemoteProducts(next);
+    }, () => setRemoteProducts(null));
+    return unsubscribe;
+  }, []);
+
+  const menuProducts = remoteProducts && remoteProducts.length ? remoteProducts : products;
 
   const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return products.filter((product) => {
+    return menuProducts.filter((product) => {
       const inCategory = selectedCategory === "Todos" || product.category === selectedCategory;
       const inSearch =
         !term ||
@@ -330,7 +359,7 @@ export default function Home() {
         product.description.toLowerCase().includes(term);
       return inCategory && inSearch;
     });
-  }, [search, selectedCategory]);
+  }, [menuProducts, search, selectedCategory]);
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
