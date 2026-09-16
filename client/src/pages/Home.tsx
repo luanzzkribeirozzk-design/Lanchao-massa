@@ -252,7 +252,7 @@ const money = (value: number) =>
 const isOpenNow = () => {
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  return currentMinutes >= 17 * 60 + 30;
+  return currentMinutes >= 17 * 60 + 30 && currentMinutes < 24 * 60;
 };
 
 export default function Home() {
