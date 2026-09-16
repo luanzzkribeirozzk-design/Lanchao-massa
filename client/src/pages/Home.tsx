@@ -312,6 +312,9 @@ export default function Home() {
   const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "dinheiro" | "">("");
+  const [needsChange, setNeedsChange] = useState<"sim" | "nao" | "">("");
+  const [changeFor, setChangeFor] = useState("");
   const [isOpen] = useState(isOpenNow);
   const [optionProduct, setOptionProduct] = useState<Product | null>(null);
   const [optionChoice, setOptionChoice] = useState("");
@@ -407,6 +410,10 @@ export default function Home() {
       "",
       `Nome: ${customerName.trim()}`,
       `Endereço: ${customerAddress.trim()}`,
+      `Forma de pagamento: ${paymentMethod === "pix" ? "PIX" : "Dinheiro"}`,
+      ...(paymentMethod === "dinheiro"
+        ? [`Troco: ${needsChange === "sim" ? `Sim, para ${changeFor.trim() || "valor a informar"}` : "Não precisa"}`]
+        : []),
       "",
       "Pode me informar quanto fica o total com o frete?",
     ].join("\n");
@@ -414,6 +421,9 @@ export default function Home() {
     setCheckoutOpen(false);
     setCustomerName("");
     setCustomerAddress("");
+    setPaymentMethod("");
+    setNeedsChange("");
+    setChangeFor("");
   };
 
   return (
@@ -565,6 +575,8 @@ export default function Home() {
             <form onSubmit={sendOrder}>
               <label>Nome completo<input required value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Como podemos te chamar?" /></label>
               <label>Endereço de entrega<textarea required value={customerAddress} onChange={(event) => setCustomerAddress(event.target.value)} placeholder="Rua, número, bairro e ponto de referência" rows={3} /></label>
+              <fieldset className="payment-options"><legend>Forma de pagamento</legend><label><input type="radio" name="payment" value="pix" required checked={paymentMethod === "pix"} onChange={() => { setPaymentMethod("pix"); setNeedsChange(""); }} /> PIX</label><label><input type="radio" name="payment" value="dinheiro" checked={paymentMethod === "dinheiro"} onChange={() => setPaymentMethod("dinheiro")} /> Dinheiro</label></fieldset>
+              {paymentMethod === "dinheiro" && <fieldset className="payment-options"><legend>Vai precisar de troco?</legend><label><input type="radio" name="change" value="nao" required checked={needsChange === "nao"} onChange={() => { setNeedsChange("nao"); setChangeFor(""); }} /> Não</label><label><input type="radio" name="change" value="sim" checked={needsChange === "sim"} onChange={() => setNeedsChange("sim")} /> Sim</label>{needsChange === "sim" && <label>Troco para quanto?<input required value={changeFor} onChange={(event) => setChangeFor(event.target.value)} placeholder="Ex.: R$ 50,00" /></label>}</fieldset>}
               <div className="checkout-note"><Check size={16} /> Seu pedido será enviado pronto para o WhatsApp do Lanchão Massa.</div>
               <button className="checkout-button" type="submit">Finalizar e abrir WhatsApp <ArrowRight size={17} /></button>
             </form>

@@ -267,3 +267,10 @@ body { background: #f2bd3f; }
 .menu-section { background: #f2bd3f; }
 .info-strip { background: #f2bd3f; }
 .footer { background: #f2bd3f; }
+
+.payment-options { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; border: 0; }
+.payment-options legend { width: 100%; margin-bottom: 2px; color: var(--ink); font-size: 12px; font-weight: 800; }
+.payment-options > label { min-width: 110px; flex: 1; display: flex; flex-direction: row !important; align-items: center; gap: 7px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--cream); font-size: 12px; font-weight: 700; }
+.payment-options > label:has(input:checked) { border-color: var(--orange); color: var(--orange-dark); background: #fff0e7; }
+.payment-options input[type="radio"] { accent-color: var(--orange); }
+.payment-options label:last-child:has(input:not([type="radio"])) { width: 100%; flex-direction: column !important; align-items: stretch; border: 0; padding: 0; background: transparent; color: var(--muted); font-size: 11px; }
