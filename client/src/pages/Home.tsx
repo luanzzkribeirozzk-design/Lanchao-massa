@@ -33,11 +33,42 @@ type Product = {
   category: Category;
   tag?: string;
   options?: string[];
+  image?: string;
 };
 
 type CartItem = Product & { quantity: number; option?: string };
 
 const LOGO_PATH = "/logo-lanchao-massa.png";
+
+const productImages: Record<string, string> = {
+  "combo-super": "/products/combo-super.jpg",
+  "combo-x-gigante": "/products/combo-x-gigante.jpg",
+  "combo-trad-duplo": "/products/combo-trad-duplo.jpg",
+  "combo-x-tudo": "/products/combo-x-tudo.jpg",
+  "combo-baguete-calabresa": "/products/combo-baguete-calabresa.jpg",
+  "combo-baguete-frango": "/products/combo-baguete-frango.jpg",
+  "combo-especial": "/products/combo-01-especial.jpg",
+  tradicional: "/products/tradicional.jpg",
+  "trad-calabresa-frango": "/products/trad-calabresa-frango.jpg",
+  "x-salada": "/products/x-salada.jpg",
+  "x-bacon": "/products/x-bacon.jpg",
+  especial: "/products/especial.jpg",
+  "esp-calabresa-frango": "/products/esp-calabresa-frango.jpg",
+  "esp-x-tudo": "/products/esp-x-tudo.jpg",
+  gigante: "/products/gigante.jpg",
+  "baguete-frango-calabresa": "/products/baguete-frango-calabresa.jpg",
+  "mega-hot-dog": "/products/mega-hot-dog.jpg",
+  "pastel-misto": "/products/pastel-misto.jpg",
+  "pastel-sabores": "/products/pastel-sabores.jpg",
+  "pastel-queijo-coalho": "/products/pastel-queijo-coalho.jpg",
+  "pastel-camarao": "/products/pastel-camarao.jpg",
+  panqueca: "/products/panqueca.jpg",
+  espaguete: "/products/espaguete.jpg",
+  batata: "/products/batata.jpg",
+  suco: "/products/suco.jpg",
+  "refri-lata": "/products/refri-lata.jpg",
+  agua: "/products/agua.jpg",
+};
 
 const WHATSAPP_NUMBER = "5583981053745";
 const OPENING_TIME = "17:30";
@@ -452,6 +483,7 @@ export default function Home() {
           <div className="products-grid">
             {filteredProducts.map((product) => (
               <article className="product-card" key={product.id}>
+                <div className="product-image"><img src={productImages[product.id]} alt={product.name} loading="lazy" /></div>
                 <div className="product-card__top">
                   <div className="product-icon"><UtensilsCrossed size={18} /></div>
                   <div className="product-price">
