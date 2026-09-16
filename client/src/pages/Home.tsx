@@ -1,25 +1,492 @@
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import { useMemo, useState } from "react";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Clock3,
+  MapPin,
+  Minus,
+  Phone,
+  Plus,
+  Search,
+  ShoppingBag,
+  Trash2,
+  UtensilsCrossed,
+  X,
+} from "lucide-react";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Best Practices, Design Guide and Common Pitfalls
- */
+type Category =
+  | "Combos"
+  | "Tradicionais"
+  | "Especiais"
+  | "Baguetes & hot dog"
+  | "Pastéis"
+  | "Panquecas & espaguetes"
+  | "Porções & bebidas";
+
+type Product = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: Category;
+  tag?: string;
+};
+
+type CartItem = Product & { quantity: number };
+
+const WHATSAPP_NUMBER = "5583981053745";
+const OPENING_TIME = "17:30";
+const CLOSING_TIME = "00:00";
+
+const categories: { label: string; value: Category | "Todos" }[] = [
+  { label: "Todos", value: "Todos" },
+  { label: "Combos", value: "Combos" },
+  { label: "Hambúrgueres tradicionais", value: "Tradicionais" },
+  { label: "Hambúrgueres especiais", value: "Especiais" },
+  { label: "Baguetes & hot dog", value: "Baguetes & hot dog" },
+  { label: "Pastéis", value: "Pastéis" },
+  { label: "Panquecas & espaguetes", value: "Panquecas & espaguetes" },
+  { label: "Porções & bebidas", value: "Porções & bebidas" },
+];
+
+const products: Product[] = [
+  {
+    id: "combo-super",
+    name: "Super combo artesanal",
+    description: "Lanche artesanal, batata frita e refrigerante.",
+    price: 28,
+    category: "Combos",
+    tag: "Mais pedido",
+  },
+  {
+    id: "combo-x-gigante",
+    name: "Combo 06 · X-Gigante",
+    description: "X-Gigante com batata frita e refrigerante.",
+    price: 45,
+    category: "Combos",
+  },
+  {
+    id: "combo-trad-duplo",
+    name: "Combo 05 · Trad. X-Duplo",
+    description: "X-Duplo tradicional com batata e refrigerante.",
+    price: 27,
+    category: "Combos",
+  },
+  {
+    id: "combo-x-tudo",
+    name: "Combo 04 · X-Tudo",
+    description: "X-Tudo completo com batata e refrigerante.",
+    price: 35,
+    category: "Combos",
+  },
+  {
+    id: "combo-baguete-calabresa",
+    name: "Combo 03 · Baguete calabresa",
+    description: "Baguete de calabresa com acompanhamento e bebida.",
+    price: 30,
+    category: "Combos",
+  },
+  {
+    id: "combo-baguete-frango",
+    name: "Combo 02 · Baguete frango",
+    description: "Baguete de frango com acompanhamento e bebida.",
+    price: 30,
+    category: "Combos",
+  },
+  {
+    id: "combo-especial",
+    name: "Combo 01 · Especial",
+    description: "Lanche especial com acompanhamento e bebida.",
+    price: 30,
+    category: "Combos",
+  },
+  {
+    id: "tradicional",
+    name: "Tradicional",
+    description: "Pão, carne, queijo, presunto, tomate, alface e molho especial.",
+    price: 12,
+    category: "Tradicionais",
+  },
+  {
+    id: "trad-calabresa-frango",
+    name: "Calabresa / frango",
+    description: "Escolha calabresa ou frango, com queijo, salada e molho da casa.",
+    price: 15,
+    category: "Tradicionais",
+  },
+  {
+    id: "x-salada",
+    name: "X-Salada",
+    description: "Carne, queijo, presunto, salada fresca e molho especial.",
+    price: 17,
+    category: "Tradicionais",
+  },
+  {
+    id: "x-bacon",
+    name: "X-Bacon",
+    description: "Carne, queijo, bacon crocante, salada e molho especial.",
+    price: 18,
+    category: "Tradicionais",
+  },
+  {
+    id: "especial",
+    name: "Especial",
+    description: "Lanche especial com carne, queijo, presunto, bacon e salada.",
+    price: 20,
+    category: "Especiais",
+    tag: "Favorito",
+  },
+  {
+    id: "esp-calabresa-frango",
+    name: "Calabresa / frango",
+    description: "Versão especial com calabresa ou frango, queijo e complementos.",
+    price: 25,
+    category: "Especiais",
+  },
+  {
+    id: "esp-x-tudo",
+    name: "X-Tudo",
+    description: "Carne, queijo, presunto, bacon, calabresa, ovo, salada e molho.",
+    price: 30,
+    category: "Especiais",
+  },
+  {
+    id: "gigante",
+    name: "Gigante",
+    description: "O maior da casa, recheado com os melhores complementos.",
+    price: 35,
+    category: "Especiais",
+  },
+  {
+    id: "baguete-frango-calabresa",
+    name: "Baguete frango / calabresa",
+    description: "Baguete assada, recheio cremoso, queijo e molho da casa.",
+    price: 22,
+    category: "Baguetes & hot dog",
+  },
+  {
+    id: "mega-hot-dog",
+    name: "Mega hot dog",
+    description: "Pão macio, salsicha, purê, milho, batata palha e molhos.",
+    price: 30,
+    category: "Baguetes & hot dog",
+  },
+  {
+    id: "pastel-misto",
+    name: "Pastel misto",
+    description: "Presunto e queijo em massa sequinha e crocante.",
+    price: 8,
+    category: "Pastéis",
+  },
+  {
+    id: "pastel-sabores",
+    name: "Pastel pizza / frango / calabresa / carne",
+    description: "Escolha seu recheio favorito entre os sabores da casa.",
+    price: 10,
+    category: "Pastéis",
+  },
+  {
+    id: "pastel-queijo-coalho",
+    name: "Pastel queijo coalho / catupiry",
+    description: "Recheio cremoso e queijo coalho dourado.",
+    price: 12,
+    category: "Pastéis",
+  },
+  {
+    id: "pastel-camarao",
+    name: "Pastel de camarão",
+    description: "Camarão temperado em massa crocante.",
+    price: 15,
+    category: "Pastéis",
+  },
+  {
+    id: "panqueca",
+    name: "Panqueca carne / frango",
+    description: "Panqueca recheada, molho especial e queijo gratinado.",
+    price: 18,
+    category: "Panquecas & espaguetes",
+  },
+  {
+    id: "espaguete",
+    name: "Espaguete carne / frango",
+    description: "Massa ao molho da casa com opção de carne ou frango.",
+    price: 17,
+    category: "Panquecas & espaguetes",
+  },
+  {
+    id: "batata",
+    name: "Batata frita",
+    description: "Porção dourada e crocante para compartilhar.",
+    price: 10,
+    category: "Porções & bebidas",
+    tag: "A partir de",
+  },
+  {
+    id: "suco",
+    name: "Suco natural 500 ml",
+    description: "Consulte os sabores disponíveis no dia.",
+    price: 6,
+    category: "Porções & bebidas",
+  },
+  {
+    id: "refri-lata",
+    name: "Refrigerante lata",
+    description: "Consulte as opções disponíveis.",
+    price: 6,
+    category: "Porções & bebidas",
+  },
+  {
+    id: "agua",
+    name: "Água mineral",
+    description: "Garrafa individual gelada.",
+    price: 5,
+    category: "Porções & bebidas",
+  },
+];
+
+const money = (value: number) =>
+  value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const isOpenNow = () => {
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  return currentMinutes >= 17 * 60 + 30;
+};
+
 export default function Home() {
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  const [selectedCategory, setSelectedCategory] = useState<Category | "Todos">("Todos");
+  const [search, setSearch] = useState("");
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([]);
+  const [customerName, setCustomerName] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [isOpen] = useState(isOpenNow);
+
+  const filteredProducts = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return products.filter((product) => {
+      const inCategory = selectedCategory === "Todos" || product.category === selectedCategory;
+      const inSearch =
+        !term ||
+        product.name.toLowerCase().includes(term) ||
+        product.description.toLowerCase().includes(term);
+      return inCategory && inSearch;
+    });
+  }, [search, selectedCategory]);
+
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const checkoutTotal = checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const addToCart = (product: Product) => {
+    setCart((current) => {
+      const existing = current.find((item) => item.id === product.id);
+      if (existing) {
+        return current.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
+        );
+      }
+      return [...current, { ...product, quantity: 1 }];
+    });
+  };
+
+  const changeQuantity = (id: string, amount: number) => {
+    setCart((current) =>
+      current
+        .map((item) =>
+          item.id === id ? { ...item, quantity: Math.max(0, item.quantity + amount) } : item,
+        )
+        .filter((item) => item.quantity > 0),
+    );
+  };
+
+  const startCheckout = (items: CartItem[]) => {
+    if (!items.length) return;
+    setCheckoutItems(items);
+    setCartOpen(false);
+    setCheckoutOpen(true);
+  };
+
+  const buyNow = (product: Product) => {
+    startCheckout([{ ...product, quantity: 1 }]);
+  };
+
+  const sendOrder = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const orderLines = checkoutItems
+      .map((item) => `• ${item.quantity}x ${item.name} — ${money(item.price * item.quantity)}`)
+      .join("\n");
+    const message = [
+      "Olá, Lanchão Massa! Quero fazer um pedido:",
+      "",
+      orderLines,
+      "",
+      `*Total dos produtos: ${money(checkoutTotal)}*`,
+      "*Frete: a combinar*",
+      "*Total com frete: a confirmar*",
+      "",
+      `Nome: ${customerName.trim()}`,
+      `Endereço: ${customerAddress.trim()}`,
+      "",
+      "Pode me informar quanto fica o total com o frete?",
+    ].join("\n");
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
+    setCheckoutOpen(false);
+    setCustomerName("");
+    setCustomerAddress("");
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="site-shell">
+      {!isOpen && (
+        <div className="closed-banner" role="status">
+          <div className="closed-banner__inner">
+            <div className="closed-icon"><Clock3 size={20} /></div>
+            <div>
+              <strong>Estamos fechados no momento</strong>
+              <span>O Lanchão Massa abre às <b>{OPENING_TIME}</b>. Faça seu pedido a partir desse horário!</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <header className="topbar">
+        <a className="brand" href="#inicio" aria-label="Lanchão Massa início">
+          <span className="brand-mark"><UtensilsCrossed size={21} /></span>
+          <span><b>LANCHÃO</b><em>MASSA</em></span>
+        </a>
+        <div className="topbar__right">
+          <div className={`open-indicator ${isOpen ? "is-open" : "is-closed"}`}>
+            <span className="status-dot" />
+            {isOpen ? "Aberto agora" : `Abre às ${OPENING_TIME}`}
+          </div>
+          <button className="cart-button" onClick={() => setCartOpen(true)} aria-label="Abrir carrinho">
+            <ShoppingBag size={19} />
+            <span>Meu carrinho</span>
+            {cartCount > 0 && <b>{cartCount}</b>}
+          </button>
+        </div>
+      </header>
+
       <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
+        <section className="hero" id="inicio">
+          <div className="hero__glow hero__glow--one" />
+          <div className="hero__glow hero__glow--two" />
+          <div className="hero__content">
+            <p className="eyebrow"><span /> Delivery • Lanches feitos na hora</p>
+            <h1>O sabor que<br /><strong>mata a fome.</strong></h1>
+            <p className="hero__copy">Seu lanche favorito, caprichado do jeito que você gosta. Escolha, adicione ao carrinho e peça pelo WhatsApp.</p>
+            <a className="primary-cta" href="#cardapio">Ver cardápio <ArrowRight size={18} /></a>
+          </div>
+          <div className="hero__plate" aria-hidden="true">
+            <div className="plate-ring" />
+            <div className="burger-illustration">
+              <div className="burger-bun burger-bun--top"><i /><i /><i /><i /></div>
+              <div className="burger-lettuce" />
+              <div className="burger-cheese" />
+              <div className="burger-patty" />
+              <div className="burger-cheese burger-cheese--lower" />
+              <div className="burger-lettuce burger-lettuce--lower" />
+              <div className="burger-bun burger-bun--bottom" />
+            </div>
+            <span className="hero__stamp">feito<br /><b>na hora</b></span>
+          </div>
+        </section>
+
+        <section className="menu-section" id="cardapio">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow eyebrow--dark"><span /> Escolha o seu</p>
+              <h2>Cardápio completo</h2>
+            </div>
+            <div className="search-box">
+              <Search size={17} />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar no cardápio" aria-label="Buscar no cardápio" />
+            </div>
+          </div>
+
+          <div className="category-nav" role="tablist" aria-label="Categorias do cardápio">
+            {categories.map((category) => (
+              <button
+                key={category.value}
+                className={selectedCategory === category.value ? "category-pill is-active" : "category-pill"}
+                onClick={() => setSelectedCategory(category.value)}
+                role="tab"
+                aria-selected={selectedCategory === category.value}
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="products-grid">
+            {filteredProducts.map((product) => (
+              <article className="product-card" key={product.id}>
+                <div className="product-card__top">
+                  <div className="product-icon"><UtensilsCrossed size={18} /></div>
+                  <div className="product-price">
+                    {product.tag && <span>{product.tag}</span>}
+                    <strong>{money(product.price)}</strong>
+                  </div>
+                </div>
+                <p className="product-category">{product.category}</p>
+                <h3>{product.name}</h3>
+                <p className="product-description">{product.description}</p>
+                <div className="product-actions">
+                  <button className="add-button" onClick={() => addToCart(product)}><Plus size={16} /> Adicionar ao carrinho</button>
+                  <button className="buy-button" onClick={() => buyNow(product)}>Comprar</button>
+                </div>
+              </article>
+            ))}
+          </div>
+          {!filteredProducts.length && (
+            <div className="empty-state"><Search size={24} /><h3>Nenhum item encontrado</h3><p>Tente buscar por outro nome ou escolha outra categoria.</p></div>
+          )}
+        </section>
+
+        <section className="info-strip">
+          <div><Clock3 size={20} /><span><b>Horário de atendimento</b><small>Todos os dias, das {OPENING_TIME} às {CLOSING_TIME}</small></span></div>
+          <div><Phone size={20} /><span><b>Peça pelo WhatsApp</b><small>(83) 98105-3745</small></span></div>
+          <div><MapPin size={20} /><span><b>Delivery</b><small>Informe seu endereço no pedido</small></span></div>
+        </section>
       </main>
+
+      <footer className="footer"><span>© {new Date().getFullYear()} Lanchão Massa</span><span>Feito para matar a fome.</span></footer>
+
+      {cartOpen && (
+        <div className="overlay" onMouseDown={(event) => event.target === event.currentTarget && setCartOpen(false)}>
+          <aside className="cart-panel" aria-label="Carrinho">
+            <div className="panel-header"><div><p className="eyebrow eyebrow--dark"><span /> Seu pedido</p><h2>Meu carrinho</h2></div><button className="icon-button" onClick={() => setCartOpen(false)} aria-label="Fechar carrinho"><X size={20} /></button></div>
+            {cart.length === 0 ? (
+              <div className="cart-empty"><div className="cart-empty__icon"><ShoppingBag size={28} /></div><h3>Seu carrinho está vazio</h3><p>Adicione seus favoritos e monte seu pedido.</p><button className="primary-cta primary-cta--small" onClick={() => { setCartOpen(false); document.getElementById("cardapio")?.scrollIntoView({ behavior: "smooth" }); }}>Explorar cardápio <ArrowRight size={16} /></button></div>
+            ) : (
+              <>
+                <div className="cart-items">{cart.map((item) => <div className="cart-item" key={item.id}><div className="cart-item__info"><b>{item.name}</b><span>{money(item.price)} cada</span></div><div className="cart-item__bottom"><div className="quantity-control"><button onClick={() => changeQuantity(item.id, -1)} aria-label={`Diminuir ${item.name}`}>{item.quantity === 1 ? <Trash2 size={14} /> : <Minus size={14} />}</button><b>{item.quantity}</b><button onClick={() => changeQuantity(item.id, 1)} aria-label={`Aumentar ${item.name}`}><Plus size={14} /></button></div><strong>{money(item.price * item.quantity)}</strong></div></div>)}</div>
+                <div className="cart-summary"><div><span>Subtotal</span><strong>{money(cartTotal)}</strong></div><small>Frete calculado e combinado pelo WhatsApp.</small><button className="checkout-button" onClick={() => startCheckout(cart)}>Continuar para finalizar <ArrowRight size={17} /></button></div>
+              </>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {checkoutOpen && (
+        <div className="overlay" onMouseDown={(event) => event.target === event.currentTarget && setCheckoutOpen(false)}>
+          <section className="checkout-modal" aria-label="Finalizar pedido">
+            <div className="panel-header"><div><p className="eyebrow eyebrow--dark"><span /> Quase lá</p><h2>Finalizar pedido</h2></div><button className="icon-button" onClick={() => setCheckoutOpen(false)} aria-label="Fechar checkout"><X size={20} /></button></div>
+            <div className="checkout-total"><span>Total dos produtos</span><strong>{money(checkoutTotal)}</strong><small>O frete será combinado no WhatsApp.</small></div>
+            <form onSubmit={sendOrder}>
+              <label>Nome completo<input required value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Como podemos te chamar?" /></label>
+              <label>Endereço de entrega<textarea required value={customerAddress} onChange={(event) => setCustomerAddress(event.target.value)} placeholder="Rua, número, bairro e ponto de referência" rows={3} /></label>
+              <div className="checkout-note"><Check size={16} /> Seu pedido será enviado pronto para o WhatsApp do Lanchão Massa.</div>
+              <button className="checkout-button" type="submit">Finalizar e abrir WhatsApp <ArrowRight size={17} /></button>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
