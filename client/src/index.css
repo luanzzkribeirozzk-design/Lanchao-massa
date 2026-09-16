@@ -258,3 +258,12 @@ a { color: inherit; text-decoration: none; }
   .product-price strong { font-size: 14px; }
   .add-button, .buy-button { height: 30px; font-size: 9px; }
 }
+
+/* Fundo de cor sólida da marca — aplicado por último para prevalecer em todas as telas. */
+body { background: #f2bd3f; }
+.site-shell { background: #f2bd3f; }
+.topbar { background: #f2bd3f; border-bottom-color: rgba(23,21,19,.16); }
+.hero { background: #f2bd3f; }
+.menu-section { background: #f2bd3f; }
+.info-strip { background: #f2bd3f; }
+.footer { background: #f2bd3f; }
