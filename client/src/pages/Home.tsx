@@ -524,6 +524,14 @@ export default function Home() {
 
       <footer className="footer"><span>© {new Date().getFullYear()} Lanchão Massa</span><span>Feito para matar a fome.</span></footer>
 
+      {cartCount > 0 && (
+        <button className="floating-cart" onClick={() => setCartOpen(true)} aria-label="Abrir carrinho com pedido">
+          <span className="floating-cart__icon"><ShoppingBag size={21} /><b>{cartCount}</b></span>
+          <span><strong>Seu pedido</strong><small>{money(cartTotal)} · Ver carrinho</small></span>
+          <ArrowRight size={18} />
+        </button>
+      )}
+
       {cartOpen && (
         <div className="overlay" onMouseDown={(event) => event.target === event.currentTarget && setCartOpen(false)}>
           <aside className="cart-panel" aria-label="Carrinho">
