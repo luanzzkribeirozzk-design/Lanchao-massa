@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { collection, doc, onSnapshot } from "firebase/firestore";
 import {
   ArrowRight,
   Check,
@@ -40,8 +40,10 @@ type Product = {
 };
 
 type CartItem = Product & { quantity: number; option?: string };
+type StoreSettings = { name: string; color: string };
 
 const LOGO_PATH = "/logo-lanchao-massa.png";
+const DEFAULT_STORE: StoreSettings = { name: "Lanchão Massa", color: "#ee5b28" };
 
 const productImages: Record<string, string> = {
   "combo-super": "/products/combo-super.jpg",
@@ -322,6 +324,12 @@ export default function Home() {
   const [optionChoice, setOptionChoice] = useState("");
   const [optionAction, setOptionAction] = useState<"cart" | "buy">("cart");
   const [remoteProducts, setRemoteProducts] = useState<Product[] | null>(null);
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE);
+
+  useEffect(() => onSnapshot(doc(publicDb, "settings", "store"), (snapshot) => {
+    const data = snapshot.data();
+    if (data) setStoreSettings({ name: String(data.name || DEFAULT_STORE.name), color: String(data.color || DEFAULT_STORE.color) });
+  }), []);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(publicDb, "products"), (snapshot) => {
@@ -429,7 +437,7 @@ export default function Home() {
       .map((item) => `• ${item.quantity}x ${item.name}${item.option ? ` (${item.option})` : ""} — ${money(item.price * item.quantity)}`)
       .join("\n");
     const message = [
-      "Olá, Lanchão Massa! Quero fazer um pedido:",
+      `Olá, ${storeSettings.name}! Quero fazer um pedido:`,
       "",
       orderLines,
       "",
@@ -456,22 +464,22 @@ export default function Home() {
   };
 
   return (
-    <div className="site-shell">
+    <div className="site-shell" style={{ "--orange": storeSettings.color } as CSSProperties}>
       {!isOpen && (
         <div className="closed-banner" role="status">
           <div className="closed-banner__inner">
             <div className="closed-icon"><Clock3 size={20} /></div>
             <div>
               <strong>Estamos fechados no momento</strong>
-              <span>O Lanchão Massa abre às <b>{OPENING_TIME}</b>. Faça seu pedido a partir desse horário!</span>
+              <span>O {storeSettings.name} abre às <b>{OPENING_TIME}</b>. Faça seu pedido a partir desse horário!</span>
             </div>
           </div>
         </div>
       )}
 
       <header className="topbar">
-        <a className="brand" href="#inicio" aria-label="Lanchão Massa início">
-          <img className="brand-logo" src={LOGO_PATH} alt="Lanchão Massa Delivery" />
+        <a className="brand" href="#inicio" aria-label={`${storeSettings.name} início`}>
+          <img className="brand-logo" src={LOGO_PATH} alt={`${storeSettings.name} Delivery`} />
         </a>
         <div className="topbar__right">
           <div className={`open-indicator ${isOpen ? "is-open" : "is-closed"}`}>
@@ -561,7 +569,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="footer"><span>© {new Date().getFullYear()} Lanchão Massa</span><span>Feito para matar a fome.</span></footer>
+      <footer className="footer"><span>© {new Date().getFullYear()} {storeSettings.name}</span><span>Feito para matar a fome.</span></footer>
 
       <button className="floating-cart" onClick={() => setCartOpen(true)} aria-label="Abrir carrinho com pedido">
           <span className="floating-cart__icon"><ShoppingBag size={21} /><b>{cartCount}</b></span>
@@ -606,7 +614,7 @@ export default function Home() {
               <label>Endereço de entrega<textarea required value={customerAddress} onChange={(event) => setCustomerAddress(event.target.value)} placeholder="Rua, número, bairro e ponto de referência" rows={3} /></label>
               <fieldset className="payment-options"><legend>Forma de pagamento</legend><label><input type="radio" name="payment" value="pix" required checked={paymentMethod === "pix"} onChange={() => { setPaymentMethod("pix"); setNeedsChange(""); }} /> PIX</label><label><input type="radio" name="payment" value="dinheiro" checked={paymentMethod === "dinheiro"} onChange={() => setPaymentMethod("dinheiro")} /> Dinheiro</label></fieldset>
               {paymentMethod === "dinheiro" && <fieldset className="payment-options"><legend>Vai precisar de troco?</legend><label><input type="radio" name="change" value="nao" required checked={needsChange === "nao"} onChange={() => { setNeedsChange("nao"); setChangeFor(""); }} /> Não</label><label><input type="radio" name="change" value="sim" checked={needsChange === "sim"} onChange={() => setNeedsChange("sim")} /> Sim</label>{needsChange === "sim" && <label>Troco para quanto?<input required value={changeFor} onChange={(event) => setChangeFor(event.target.value)} placeholder="Ex.: R$ 50,00" /></label>}</fieldset>}
-              <div className="checkout-note"><Check size={16} /> Seu pedido será enviado pronto para o WhatsApp do Lanchão Massa.</div>
+              <div className="checkout-note"><Check size={16} /> Seu pedido será enviado pronto para o WhatsApp do {storeSettings.name}.</div>
               <button className="checkout-button" type="submit">Finalizar e abrir WhatsApp <ArrowRight size={17} /></button>
             </form>
           </section>
