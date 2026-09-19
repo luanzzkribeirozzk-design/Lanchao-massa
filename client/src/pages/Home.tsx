@@ -530,7 +530,7 @@ export default function Home() {
           <div className="products-grid">
             {filteredProducts.map((product) => (
               <article className="product-card" key={product.id}>
-                <div className="product-image"><img src={productImages[product.id]} alt={product.name} loading="lazy" /></div>
+                <div className="product-image"><img src={product.image || productImages[product.id] || LOGO_PATH} alt={product.name} loading="lazy" /></div>
                 <div className="product-card__top">
                   <div className="product-icon"><UtensilsCrossed size={18} /></div>
                   <div className="product-price">
