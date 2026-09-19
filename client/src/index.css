@@ -274,3 +274,27 @@ body { background: #f2bd3f; }
 .payment-options > label:has(input:checked) { border-color: var(--orange); color: var(--orange-dark); background: #fff0e7; }
 .payment-options input[type="radio"] { accent-color: var(--orange); }
 .payment-options label:last-child:has(input:not([type="radio"])) { width: 100%; flex-direction: column !important; align-items: stretch; border: 0; padding: 0; background: transparent; color: var(--muted); font-size: 11px; }
+
+/* Composição desktop: mais respiro, hierarquia e leitura em monitores grandes. */
+@media (min-width: 1024px) {
+  .topbar { height: 84px; padding-left: max(42px, calc((100vw - 1320px) / 2)); padding-right: max(42px, calc((100vw - 1320px) / 2)); }
+  .hero, .menu-section, .info-strip, .footer { max-width: 1320px; }
+  .hero { min-height: 500px; padding: 80px 9%; }
+  .hero__content { max-width: 610px; }
+  .hero h1 { font-size: clamp(62px, 6.2vw, 92px); }
+  .hero__copy { max-width: 470px; font-size: 16px; }
+  .hero__plate { width: 430px; height: 350px; flex-basis: 430px; transform: scale(1.08); }
+  .menu-section { padding: 62px 42px 92px; }
+  .section-heading h2 { font-size: 44px; }
+  .products-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+  .product-card { min-height: 310px; padding: 20px; border-radius: 14px; }
+  .product-card h3 { font-size: 19px; }
+  .product-description { min-height: 38px; font-size: 12px; }
+  .product-image { height: 160px; margin: -20px -20px 15px; border-radius: 13px 13px 0 0; }
+  .info-strip { padding: 24px 42px; margin-bottom: 52px; }
+  .footer { padding: 0 42px 34px; }
+}
+@media (min-width: 1500px) {
+  .products-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+  .product-card { min-height: 325px; }
+}
