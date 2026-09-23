@@ -40,10 +40,10 @@ type Product = {
 };
 
 type CartItem = Product & { quantity: number; option?: string };
-type StoreSettings = { name: string; color: string };
+type StoreSettings = { name: string; color: string; logo: string };
 
 const LOGO_PATH = "/logo-lanchao-massa.png";
-const DEFAULT_STORE: StoreSettings = { name: "Lanchão Massa", color: "#ee5b28" };
+const DEFAULT_STORE: StoreSettings = { name: "Lanchão Massa", color: "#ee5b28", logo: LOGO_PATH };
 
 const productImages: Record<string, string> = {
   "combo-super": "/products/combo-super.jpg",
@@ -328,7 +328,7 @@ export default function Home() {
 
   useEffect(() => onSnapshot(doc(publicDb, "settings", "store"), (snapshot) => {
     const data = snapshot.data();
-    if (data) setStoreSettings({ name: String(data.name || DEFAULT_STORE.name), color: String(data.color || DEFAULT_STORE.color) });
+    if (data) setStoreSettings({ name: String(data.name || DEFAULT_STORE.name), color: String(data.color || DEFAULT_STORE.color), logo: String(data.logo || DEFAULT_STORE.logo) });
   }), []);
 
   useEffect(() => {
@@ -479,7 +479,7 @@ export default function Home() {
 
       <header className="topbar">
         <a className="brand" href="#inicio" aria-label={`${storeSettings.name} início`}>
-          <img className="brand-logo" src={LOGO_PATH} alt={`${storeSettings.name} Delivery`} />
+          <img className="brand-logo" src={storeSettings.logo} alt={`${storeSettings.name} Delivery`} />
         </a>
         <div className="topbar__right">
           <div className={`open-indicator ${isOpen ? "is-open" : "is-closed"}`}>
@@ -505,7 +505,7 @@ export default function Home() {
             <a className="primary-cta" href="#cardapio">Ver cardápio <ArrowRight size={18} /></a>
           </div>
           <div className="hero__plate" aria-hidden="true">
-            <div className="hero-logo-wrap"><img src={LOGO_PATH} alt="" className="hero-logo" /></div>
+            <div className="hero-logo-wrap"><img src={storeSettings.logo} alt="" className="hero-logo" /></div>
           </div>
         </section>
 
