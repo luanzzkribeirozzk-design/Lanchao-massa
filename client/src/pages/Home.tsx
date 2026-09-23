@@ -355,7 +355,9 @@ export default function Home() {
     return unsubscribe;
   }, []);
 
-  const menuProducts = remoteProducts && remoteProducts.length ? remoteProducts : products;
+  // Uma coleção remota vazia é uma alteração válida do administrador, não um erro.
+  // Só usamos o catálogo embutido enquanto o Firebase ainda não respondeu ou falhou.
+  const menuProducts = remoteProducts ?? products;
 
   const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
