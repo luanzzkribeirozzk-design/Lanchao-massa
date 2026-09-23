@@ -76,8 +76,9 @@ const productImages: Record<string, string> = {
 };
 
 const WHATSAPP_NUMBER = "5583981053745";
-const OPENING_TIME = "17:30";
-const CLOSING_TIME = "00:00";
+const OPENING_TIME = "18:30";
+const CLOSING_TIME = "23:30";
+const OPEN_DAYS = "segunda, terça, quinta, sexta, sábado e domingo";
 
 const categories: { label: string; value: Category | "Todos" }[] = [
   { label: "Todos", value: "Todos" },
@@ -303,8 +304,10 @@ const money = (value: number) =>
 
 const isOpenNow = () => {
   const now = new Date();
+  const openDays = new Set([0, 1, 2, 4, 5, 6]); // domingo, segunda, terça, quinta, sexta e sábado
+  if (!openDays.has(now.getDay())) return false;
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  return currentMinutes >= 17 * 60 + 30 && currentMinutes < 24 * 60;
+  return currentMinutes >= 18 * 60 + 30 && currentMinutes < 23 * 60 + 30;
 };
 
 export default function Home() {
@@ -473,7 +476,7 @@ export default function Home() {
             <div className="closed-icon"><Clock3 size={20} /></div>
             <div>
               <strong>Estamos fechados no momento</strong>
-              <span>O {storeSettings.name} abre às <b>{OPENING_TIME}</b>. Faça seu pedido a partir desse horário!</span>
+              <span>Funcionamos {OPEN_DAYS}, das <b>{OPENING_TIME}</b> às <b>{CLOSING_TIME}</b>. Faça seu pedido nesse horário!</span>
             </div>
           </div>
         </div>
@@ -565,7 +568,7 @@ export default function Home() {
         </section>
 
         <section className="info-strip">
-          <div><Clock3 size={20} /><span><b>Horário de atendimento</b><small>Todos os dias, das {OPENING_TIME} às {CLOSING_TIME}</small></span></div>
+          <div><Clock3 size={20} /><span><b>Horário de atendimento</b><small>{OPEN_DAYS}, das {OPENING_TIME} às {CLOSING_TIME}</small></span></div>
           <div><Phone size={20} /><span><b>Peça pelo WhatsApp</b><small>(83) 98105-3745</small></span></div>
           <div><MapPin size={20} /><span><b>Delivery</b><small>Informe seu endereço no pedido</small></span></div>
         </section>
