@@ -44,6 +44,25 @@ type StoreSettings = { name: string; color: string; logo: string };
 
 const LOGO_PATH = "/logo-lanchao-massa.png";
 const DEFAULT_STORE: StoreSettings = { name: "Lanchão Massa", color: "#ee5b28", logo: LOGO_PATH };
+const PRODUCTS_CACHE_KEY = "lanchao-massa:products:v1";
+const STORE_CACHE_KEY = "lanchao-massa:store:v1";
+
+function readCache<T>(key: string): T | null {
+  try {
+    const value = window.localStorage.getItem(key);
+    return value ? JSON.parse(value) as T : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache<T>(key: string, value: T) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // O cardápio continua funcionando mesmo quando o navegador bloqueia storage.
+  }
+}
 
 const productImages: Record<string, string> = {
   "combo-super": "/products/combo-super.jpg",
@@ -333,12 +352,16 @@ export default function Home() {
   const [optionProduct, setOptionProduct] = useState<Product | null>(null);
   const [optionChoice, setOptionChoice] = useState("");
   const [optionAction, setOptionAction] = useState<"cart" | "buy">("cart");
-  const [remoteProducts, setRemoteProducts] = useState<Product[] | null>(null);
-  const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE);
+  const [remoteProducts, setRemoteProducts] = useState<Product[] | null>(() => readCache<Product[]>(PRODUCTS_CACHE_KEY));
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(() => readCache<StoreSettings>(STORE_CACHE_KEY) || DEFAULT_STORE);
 
   useEffect(() => onSnapshot(doc(publicDb, "settings", "store"), (snapshot) => {
     const data = snapshot.data();
-    if (data) setStoreSettings({ name: String(data.name || DEFAULT_STORE.name), color: String(data.color || DEFAULT_STORE.color), logo: String(data.logo || DEFAULT_STORE.logo) });
+    if (data) {
+      const next = { name: String(data.name || DEFAULT_STORE.name), color: String(data.color || DEFAULT_STORE.color), logo: String(data.logo || DEFAULT_STORE.logo) };
+      setStoreSettings(next);
+      writeCache(STORE_CACHE_KEY, next);
+    }
   }), []);
 
   useEffect(() => {
@@ -361,7 +384,11 @@ export default function Home() {
         })
         .filter((product) => product.name);
       setRemoteProducts(next);
-    }, () => setRemoteProducts(null));
+      writeCache(PRODUCTS_CACHE_KEY, next);
+    }, () => {
+      // Mantém a última versão local quando a internet estiver instável.
+      setRemoteProducts(current => current ?? readCache<Product[]>(PRODUCTS_CACHE_KEY));
+    });
     return unsubscribe;
   }, []);
 
