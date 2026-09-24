@@ -80,6 +80,13 @@ const OPENING_TIME = "18:30";
 const CLOSING_TIME = "23:30";
 const OPEN_DAYS = "segunda, terça, quinta, sexta, sábado e domingo";
 
+const useImageFallback = (event: React.SyntheticEvent<HTMLImageElement>) => {
+  const image = event.currentTarget;
+  if (image.dataset.fallbackApplied) return;
+  image.dataset.fallbackApplied = "true";
+  image.src = LOGO_PATH;
+};
+
 const categories: { label: string; value: Category | "Todos" }[] = [
   { label: "Todos", value: "Todos" },
   { label: "Combos", value: "Combos" },
@@ -484,7 +491,7 @@ export default function Home() {
 
       <header className="topbar">
         <a className="brand" href="#inicio" aria-label={`${storeSettings.name} início`}>
-          <img className="brand-logo" src={storeSettings.logo} alt={`${storeSettings.name} Delivery`} />
+          <img className="brand-logo" src={storeSettings.logo} alt={`${storeSettings.name} Delivery`} decoding="async" onError={useImageFallback} />
         </a>
         <div className="topbar__right">
           <div className={`open-indicator ${isOpen ? "is-open" : "is-closed"}`}>
@@ -510,7 +517,7 @@ export default function Home() {
             <a className="primary-cta" href="#cardapio">Ver cardápio <ArrowRight size={18} /></a>
           </div>
           <div className="hero__plate" aria-hidden="true">
-            <div className="hero-logo-wrap"><img src={storeSettings.logo} alt="" className="hero-logo" /></div>
+            <div className="hero-logo-wrap"><img src={storeSettings.logo} alt="" className="hero-logo" decoding="async" onError={useImageFallback} /></div>
           </div>
         </section>
 
@@ -543,7 +550,7 @@ export default function Home() {
           <div className="products-grid">
             {filteredProducts.map((product) => (
               <article className="product-card" key={product.id}>
-                <div className="product-image"><img src={product.image || productImages[product.id] || LOGO_PATH} alt={product.name} loading="lazy" /></div>
+                <div className="product-image"><img src={product.image || productImages[product.id] || LOGO_PATH} alt={product.name} loading="lazy" decoding="async" onError={useImageFallback} /></div>
                 <div className="product-card__top">
                   <div className="product-icon"><UtensilsCrossed size={18} /></div>
                   <div className="product-price">
